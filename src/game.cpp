@@ -17,8 +17,9 @@ void Game::Run(Renderer &renderer, std::size_t target_frame_duration) {
     frame_start = SDL_GetTicks();
 
     // Input, Update, Render - the main game loop.
-    renderer.Render(_spirit);
-
+    renderer.Render(_spirit, _aliens);
+    _aliens.UpdatePosition();
+    
     frame_end = SDL_GetTicks();
 
     // Keep track of how long each loop through the input/update/render cycle

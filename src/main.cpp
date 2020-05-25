@@ -10,8 +10,10 @@ int main() {
   constexpr std::size_t kGridWidth{16};
   constexpr std::size_t kGridHeight{16};
 
-  Renderer renderer(kScreenWidth, kScreenHeight, kGridWidth, kGridHeight);
-  Game game(kScreenWidth, kScreenHeight);
+  int aliens_forces = 40;
+
+  Renderer renderer(kScreenWidth, kScreenHeight, kGridWidth, kGridHeight, aliens_forces);
+  Game game(kScreenWidth, kScreenHeight, aliens_forces);
   game.Run(renderer, kMsPerFrame);
   std::cout << "Game has terminated successfully!\n";
   std::cout << "Score: " <<"\n";
