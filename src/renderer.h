@@ -8,6 +8,7 @@
 #include "SDL2/SDL_image.h"
 #include "spaceship.h"
 #include "alien.h"
+#include "fire.h"
 
 
 class Renderer {
@@ -16,18 +17,22 @@ class Renderer {
            const std::size_t grid_width, const std::size_t grid_height, int aliens_forces);
   ~Renderer();
 
-  void Render(Spaceship const spirit, Alien const aliens);
-  void UpdateWindowTitle();
+  void Render(Spaceship const spirit, Alien const aliens
+             , std::vector<Fire> alien_fire);
+
+  void Render_spirit_fire(int fire_x, int fire_y);
+
+  void Clear_screen(void);
+  void Update_screen(void);
+             
+  void UpdateWindowTitle(void);
 
  private:
   SDL_Window *sdl_window;
   SDL_Renderer *sdl_renderer;
   SDL_Texture *sdl_texture_spaceship;
+  SDL_Texture *sdl_texture_player_fire;
   std::vector<SDL_Texture*> sdl_texture_aliens;
-
-  // std::random_device _dev;
-  // std::mt19937 _engine;
-  // std::uniform_int_distribution<int> _random;
 
   int _aliens_forces;
   std::vector<std::string> _aliens_imgs = {"../gfx/alien1.png", 

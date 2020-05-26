@@ -3,7 +3,6 @@
 #include <string>
 #include <random>
 
-
 Renderer::Renderer(const std::size_t screen_width,
                    const std::size_t screen_height,
                    const std::size_t grid_width, 
@@ -42,11 +41,17 @@ Renderer::Renderer(const std::size_t screen_width,
     std::cerr << "Renderer could not be created.\n";
     std::cerr << "SDL_Error: " << SDL_GetError() << "\n";
   }
-
+  //spirit texture
   SDL_Surface* surface = IMG_Load("../gfx/spirit.png");
   sdl_texture_spaceship = SDL_CreateTextureFromSurface(sdl_renderer, surface);
   SDL_FreeSurface(surface);
+  
+  //spirit fire texture
+  surface = IMG_Load("../gfx/shoot0.png");
+  sdl_texture_player_fire = SDL_CreateTextureFromSurface(sdl_renderer, surface);
+  SDL_FreeSurface(surface);
 
+  //alien random texture
   std::random_device dev;
   std::mt19937 engine(dev());
   std::uniform_int_distribution<int> random(0, static_cast<int>(_aliens_imgs.size()-1));
@@ -62,6 +67,7 @@ Renderer::Renderer(const std::size_t screen_width,
 Renderer::~Renderer() {
   SDL_DestroyWindow(sdl_window);
   SDL_DestroyTexture(sdl_texture_spaceship);
+  SDL_DestroyTexture(sdl_texture_player_fire);
   
   for(int num = 0; num < _aliens_forces; num++){
     SDL_DestroyTexture(sdl_texture_aliens[num]);
@@ -70,36 +76,50 @@ Renderer::~Renderer() {
   SDL_Quit();
 }
 
-void Renderer::Render(Spaceship const spirit, Alien const aliens) {
+void Renderer::Render(Spaceship const spirit, Alien const aliens
+                    , std::vector<Fire> alien_fire) {
   SDL_Rect block;
   block.w = screen_width / grid_width;
   block.h = screen_height / grid_height;
-
-  // Clear screen
-  SDL_SetRenderDrawColor(sdl_renderer, 0x1E, 0x1E, 0x1E, 0xFF);
-  SDL_RenderClear(sdl_renderer);
 
   // Render Entity
   block.x = spirit.pos_x;
   block.y = spirit.pos_y - (grid_width * 3);
   SDL_RenderCopy(sdl_renderer, sdl_texture_spaceship, nullptr, &block);
 
-  // Render Entity shoot
-  
-
   // Render aliens
-
   for(size_t i = 0; i < _aliens_forces; i++){
-    block.x = aliens._matrix_pos[i].first;
-    block.y = aliens._matrix_pos[i].second;
-    SDL_RenderCopy(sdl_renderer, sdl_texture_aliens[i], nullptr, &block);
+    if (aliens._matrix[i])
+    {
+      block.x = aliens._matrix_pos_x[i];
+      block.y = aliens._matrix_pos_y[i];
+      SDL_RenderCopy(sdl_renderer, sdl_texture_aliens[i], nullptr, &block);
+    }
   }
-  
-  // Update Screen
-  SDL_RenderPresent(sdl_renderer);
+}
+
+// Render Entity shoot
+void Renderer::Render_spirit_fire(int fire_x, int fire_y) {
+  SDL_Rect block;
+  block.w = 4;
+  block.h = 8;
+  block.x = fire_x;
+  block.y = fire_y;
+  SDL_RenderCopy(sdl_renderer, sdl_texture_player_fire, nullptr, &block); 
 }
 
 void Renderer::UpdateWindowTitle() {
   std::string title{"space invaders"};
   SDL_SetWindowTitle(sdl_window, title.c_str());
+}
+
+void Renderer::Clear_screen(void){
+  // Clear screen
+  SDL_SetRenderDrawColor(sdl_renderer, 0x1E, 0x1E, 0x1E, 0xFF);
+  SDL_RenderClear(sdl_renderer);
+}
+
+void Renderer::Update_screen(void){
+  // Update Screen
+  SDL_RenderPresent(sdl_renderer);
 }

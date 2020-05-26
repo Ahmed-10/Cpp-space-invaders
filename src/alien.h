@@ -4,14 +4,15 @@
 #include <vector>
 #include <utility>
 
-enum class Direction { kLeft, kRight};
+enum class Direction { kLeft, kRight, kUp, kDown};
 
 class Alien {
  public:
   Alien(int screen_width, int screen_height, int aliens_forces);
 
   std::vector<bool> _matrix;
-  std::vector<std::pair<int , int>> _matrix_pos;
+  std::vector<int> _matrix_pos_x;
+  std::vector<int> _matrix_pos_y;
 
   void UpdatePosition();
 

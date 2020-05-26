@@ -4,6 +4,7 @@ OBJS += renderer.cpp
 OBJS += game.cpp
 OBJS += spaceship.cpp
 OBJS += alien.cpp
+OBJS += fire.cpp
 
 #CC specifies which compiler we're using
 CC = g++

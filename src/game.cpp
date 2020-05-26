@@ -1,7 +1,18 @@
 #include "game.h"
 #include <iostream>
+#include <algorithm>
 #include "SDL2/SDL.h"
 #include "spaceship.h"
+
+Game::Game(std::size_t screen_width, std::size_t screen_height, int aliens_forces)
+    : _spirit(screen_width, screen_height) 
+    , _aliens(screen_width, screen_height, aliens_forces) 
+{
+  _screen_width = screen_width;
+  _screen_height = _screen_height;
+  _is_spirit_fire = false;
+  _aliens_forces = aliens_forces;
+}
 
 void Game::Run(Renderer &renderer, std::size_t target_frame_duration) {
   Uint32 title_timestamp = SDL_GetTicks();
@@ -17,9 +28,42 @@ void Game::Run(Renderer &renderer, std::size_t target_frame_duration) {
     frame_start = SDL_GetTicks();
 
     // Input, Update, Render - the main game loop.
-    renderer.Render(_spirit, _aliens);
-    _aliens.UpdatePosition();
+    //note: should create a variable with the number of killed aliens could be score
+    //and the alien fire should increase and apend new member to the vector 
+    renderer.Clear_screen();
+
+    renderer.Render(_spirit, _aliens, _alien_fire);
+
+    if(_is_spirit_fire){
     
+      for(size_t i = 0; i < _player_fire.size(); i++){
+
+        renderer.Render_spirit_fire(_player_fire[i].pos_x, _player_fire[i].pos_y);
+        
+        _player_fire[i].UpdatePosition();
+        // std::cout << k++ << std::endl;
+        for(int j = 0; j < _aliens_forces; j++){
+          if(_aliens._matrix[j]){
+            if((_player_fire[i].pos_x >= (_aliens._matrix_pos_x[j] - 16))
+            && (_player_fire[i].pos_x <= (_aliens._matrix_pos_x[j] + 16))
+            && (_player_fire[i].pos_y >= (_aliens._matrix_pos_y[j] - 16))
+            && (_player_fire[i].pos_y <= (_aliens._matrix_pos_y[j] + 16)))
+            {
+              _aliens._matrix[j] = false;
+              _player_fire.erase(_player_fire.begin());
+            } 
+          } 
+        }
+        
+        if(_player_fire[i].pos_y == 0){ _player_fire.erase(_player_fire.begin());  k = 1; }
+      }
+        if(_player_fire.size() == 0) { _is_spirit_fire = false; }
+    }
+
+    renderer.Update_screen();
+
+    _aliens.UpdatePosition();
+
     frame_end = SDL_GetTicks();
 
     // Keep track of how long each loop through the input/update/render cycle
@@ -55,6 +99,10 @@ void Game::Run(Renderer &renderer, std::size_t target_frame_duration) {
             break;
           case SDLK_LEFT:
             _spirit.UpdatePosition(Spaceship::Direction::kLeft);
+            break;
+          case SDLK_SPACE:
+            _player_fire.push_back(Fire(_screen_width, _screen_height, _spirit));
+            _is_spirit_fire = true;
             break;
           default:
             break;
