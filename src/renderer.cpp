@@ -1,7 +1,5 @@
 #include "renderer.h"
-#include <iostream>
-#include <string>
-#include <random>
+#include "iostream"
 
 Renderer::Renderer(const std::size_t screen_width,
                    const std::size_t screen_height,
@@ -11,8 +9,7 @@ Renderer::Renderer(const std::size_t screen_width,
     : screen_width(screen_width),
       screen_height(screen_height),
       grid_width(grid_width),
-      grid_height(grid_height),
-      _aliens_forces(aliens_forces)
+      grid_height(grid_height)
 {
   // Initialize SDL
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -56,10 +53,15 @@ Renderer::Renderer(const std::size_t screen_width,
   std::mt19937 engine(dev());
   std::uniform_int_distribution<int> random(0, static_cast<int>(_aliens_imgs.size()-1));
 
-  for(size_t i = 0; i < aliens_forces; i++){
+  for(size_t i = 0; i < _aliens_imgs.size(); i++){
     int img = random(engine);
+
     surface = IMG_Load(_aliens_imgs[img].c_str());
     sdl_texture_aliens.emplace_back(SDL_CreateTextureFromSurface(sdl_renderer, surface));
+    SDL_FreeSurface(surface);
+
+    surface = IMG_Load(_aliens_fire_imgs[img].c_str());
+    sdl_texture_aliens_fires.emplace_back(SDL_CreateTextureFromSurface(sdl_renderer, surface));
     SDL_FreeSurface(surface);
   }
 }
@@ -69,43 +71,57 @@ Renderer::~Renderer() {
   SDL_DestroyTexture(sdl_texture_spaceship);
   SDL_DestroyTexture(sdl_texture_player_fire);
   
-  for(int num = 0; num < _aliens_forces; num++){
-    SDL_DestroyTexture(sdl_texture_aliens[num]);
+  int size = sdl_texture_aliens.size();
+  for(size_t i = 0; i < size; i++){
+    SDL_DestroyTexture(sdl_texture_aliens[i]);
+    SDL_DestroyTexture(sdl_texture_aliens_fires[i]);
   }
+
   IMG_Quit();
   SDL_Quit();
 }
 
-void Renderer::Render(Spaceship const spirit, Alien const aliens
-                    , std::vector<Fire> alien_fire) {
+void Renderer::Render_spirit(int const x, int const y) {
   SDL_Rect block;
   block.w = screen_width / grid_width;
   block.h = screen_height / grid_height;
 
   // Render Entity
-  block.x = spirit.pos_x;
-  block.y = spirit.pos_y - (grid_width * 3);
+  block.x = x;
+  block.y = y - (grid_width * 3);
   SDL_RenderCopy(sdl_renderer, sdl_texture_spaceship, nullptr, &block);
+}
 
   // Render aliens
-  for(size_t i = 0; i < _aliens_forces; i++){
-    if (aliens._matrix[i])
-    {
-      block.x = aliens._matrix_pos_x[i];
-      block.y = aliens._matrix_pos_y[i];
-      SDL_RenderCopy(sdl_renderer, sdl_texture_aliens[i], nullptr, &block);
-    }
-  }
+void Renderer::Render_aliens(int const x, int const y, int const rank){
+  SDL_Rect block;
+  block.w = screen_width / grid_width;
+  block.h = screen_height / grid_height;
+
+  block.x = x;
+  block.y = y;
+      
+  SDL_RenderCopy(sdl_renderer, sdl_texture_aliens[rank], nullptr, &block);
 }
 
 // Render Entity shoot
-void Renderer::Render_spirit_fire(int fire_x, int fire_y) {
+void Renderer::Render_spirit_fire(int const x, int const y) {
   SDL_Rect block;
   block.w = 4;
   block.h = 8;
-  block.x = fire_x;
-  block.y = fire_y;
+  block.x = x;
+  block.y = y;
   SDL_RenderCopy(sdl_renderer, sdl_texture_player_fire, nullptr, &block); 
+}
+
+// Render Aliens fire
+void Renderer::Render_aliens_fire(int x, int y, int rank) {
+  SDL_Rect block;
+  block.w = 8;
+  block.h = 16;
+  block.x = x;
+  block.y = y;
+  SDL_RenderCopy(sdl_renderer, sdl_texture_aliens_fires[rank], nullptr, &block); 
 }
 
 void Renderer::UpdateWindowTitle() {

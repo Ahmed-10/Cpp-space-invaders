@@ -1,25 +1,17 @@
 #ifndef FIRE_H
 #define FIRE_H
 
-#include "spaceship.h"
-#include "alien.h"
-#include <iostream>
+#include "spirit.h"
 
+class Fire : public Spirit{
 
-class Fire {
  public:
-    Fire(int screen_width, int screen_height, Spaceship player);
-    Fire(int screen_width, int screen_height, Alien alien, size_t alien_num);
+  Fire(int x, int y);
+  Fire(int x, int y, int rank);
 
-    int pos_x;
-    int pos_y;
-
-    void UpdatePosition();
+  void update_position();
 
  private:
-    int _screen_width;
-    int _screen_height;
-
-    Direction _direction;
+  Direction _direction;
 };
 #endif

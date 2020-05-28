@@ -1,17 +1,26 @@
 #include "game.h"
 #include <iostream>
 #include <algorithm>
-#include "SDL2/SDL.h"
-#include "spaceship.h"
 
 Game::Game(std::size_t screen_width, std::size_t screen_height, int aliens_forces)
-    : _spirit(screen_width, screen_height) 
-    , _aliens(screen_width, screen_height, aliens_forces) 
+    : _screen_width(screen_width) , _screen_height(screen_height)
+    , _is_player_fire(false) , _aliens_forces(aliens_forces)
 {
-  _screen_width = screen_width;
-  _screen_height = _screen_height;
-  _is_spirit_fire = false;
-  _aliens_forces = aliens_forces;
+  Spaceship player(screen_height, screen_width);
+  _player = player;
+
+  int x = screen_width / 8;
+  int y = screen_height / 10;
+
+  for(size_t i = 1; i <= aliens_forces; i++){
+    _aliens.emplace_back(Alien(x, y));
+  
+    x += 40;  
+    if(i % 10 == 0){
+    	x = screen_width / 8;
+    	y += 56;	
+    }
+  }
 }
 
 void Game::Run(Renderer &renderer, std::size_t target_frame_duration) {
@@ -32,37 +41,97 @@ void Game::Run(Renderer &renderer, std::size_t target_frame_duration) {
     //and the alien fire should increase and apend new member to the vector 
     renderer.Clear_screen();
 
-    renderer.Render(_spirit, _aliens, _alien_fire);
+    renderer.Render_spirit(_player.get_x_pos(), _player.get_y_pos());
 
-    if(_is_spirit_fire){
+    for(size_t i = 0; i < _aliens_forces; i++)
+      renderer.Render_aliens(_aliens[i].get_x_pos(), _aliens[i].get_y_pos(), _aliens[i].get_rank());
+
+    //update aliens position
+
+    if(_aliens.front().get_x_pos() <= 0){
+      _direction = Direction::kRight;
+      for(size_t i = 0; i < _aliens_forces; i++){
+        _aliens[i].update_position(Direction::kDown);
+        _aliens[i].update_position(Direction::kRight);
+      }  
+    }
+    else if (_aliens[_aliens_forces - 1].get_x_pos() >= (_screen_width - 40))
+    {
+      _direction = Direction::kLeft;
+      for(size_t i = 0; i < _aliens_forces; i++){
+        _aliens[i].update_position(Direction::kDown);
+        _aliens[i].update_position(Direction::kLeft);
+      } 
+    }
+    else
+    {
+      for(size_t i = 0; i < _aliens_forces; i++){
+        _aliens[i].update_position(_direction);
+      } 
+    }
+    
+    
+
+    if(_is_player_fire){
     
       for(size_t i = 0; i < _player_fire.size(); i++){
 
-        renderer.Render_spirit_fire(_player_fire[i].pos_x, _player_fire[i].pos_y);
+        renderer.Render_spirit_fire(_player_fire[i].get_x_pos(), _player_fire[i].get_y_pos());
         
-        _player_fire[i].UpdatePosition();
-        // std::cout << k++ << std::endl;
-        for(int j = 0; j < _aliens_forces; j++){
-          if(_aliens._matrix[j]){
-            if((_player_fire[i].pos_x >= (_aliens._matrix_pos_x[j] - 16))
-            && (_player_fire[i].pos_x <= (_aliens._matrix_pos_x[j] + 16))
-            && (_player_fire[i].pos_y >= (_aliens._matrix_pos_y[j] - 16))
-            && (_player_fire[i].pos_y <= (_aliens._matrix_pos_y[j] + 16)))
-            {
-              _aliens._matrix[j] = false;
-              _player_fire.erase(_player_fire.begin());
-            } 
-          } 
+        _player_fire[i].update_position();
+
+        for(size_t j = 0; j < _aliens_forces; j++){
+          int x_ = _aliens[j].get_x_pos();
+          int y_ = _aliens[j].get_y_pos();
+
+          if((_player_fire[i].get_x_pos() >= (x_ - 16)) && (_player_fire[i].get_x_pos() <= (x_ + 16))
+          && (_player_fire[i].get_y_pos() >= (y_ - 16)) && (_player_fire[i].get_y_pos() <= (y_ + 16)))
+          {
+            _aliens.erase(_aliens.begin() + j);
+            _player_fire.erase(_player_fire.begin());
+            _aliens_forces --;
+          }  
         }
         
-        if(_player_fire[i].pos_y == 0){ _player_fire.erase(_player_fire.begin());  k = 1; }
+        if(_player_fire[i].get_y_pos() == 0){ _player_fire.erase(_player_fire.begin()); }
       }
-        if(_player_fire.size() == 0) { _is_spirit_fire = false; }
+        if(_player_fire.size() == 0) { _is_player_fire = false; }
+    }
+
+
+
+    std::random_device dev;
+    std::mt19937 engine(dev());
+    std::uniform_int_distribution<int> random_1(0, 3);
+    std::uniform_int_distribution<int> random_2(0, static_cast<int>(_aliens.size() - 1));
+
+    int fire_level = random_1(engine);
+    
+    if(_alien_fire.size() < fire_level){
+      for(size_t i = 0; i < 3; i++){
+        int rand = random_2(engine);
+        std::cout << rand << std::endl;
+        _alien_fire.emplace_back(Fire(_aliens[rand].get_x_pos()
+                                    , _aliens[rand].get_y_pos()
+                                    , _aliens[rand].get_rank()));
+      }
+    }
+    
+    for(size_t i = 0; i < _alien_fire.size(); i++){
+
+      renderer.Render_aliens_fire(_alien_fire[i].get_x_pos()
+                                , _alien_fire[i].get_y_pos()
+                                , _alien_fire[i].get_rank());
+      
+      _alien_fire[i].update_position();
+  
+      if(_alien_fire[i].get_y_pos() >= _screen_height){
+        _alien_fire.erase(_alien_fire.begin() + i);
+        i--;
+      }
     }
 
     renderer.Update_screen();
-
-    _aliens.UpdatePosition();
 
     frame_end = SDL_GetTicks();
 
@@ -95,14 +164,14 @@ void Game::Run(Renderer &renderer, std::size_t target_frame_duration) {
           switch (Events.key.keysym.sym)
           {
           case SDLK_RIGHT:
-            _spirit.UpdatePosition(Spaceship::Direction::kRight);
+            _player.update_position(Direction::kRight);
             break;
           case SDLK_LEFT:
-            _spirit.UpdatePosition(Spaceship::Direction::kLeft);
+            _player.update_position(Direction::kLeft);
             break;
           case SDLK_SPACE:
-            _player_fire.push_back(Fire(_screen_width, _screen_height, _spirit));
-            _is_spirit_fire = true;
+            _player_fire.push_back(Fire(_player.get_x_pos(), _player.get_y_pos()));
+            _is_player_fire = true;
             break;
           default:
             break;

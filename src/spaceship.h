@@ -1,18 +1,16 @@
 #ifndef SPACESHIP_H
 #define SPACESHIP_H
 
-#include "SDL2/SDL.h"
-#include "SDL2/SDL_image.h"
+#include "spirit.h"
 
-class Spaceship {
+class Spaceship : public Spirit{
  public:
-  enum class Direction { kLeft, kRight };
-
+  Spaceship(){}
   Spaceship(int screen_width, int screen_hight);
-  int pos_x;
-  int pos_y ;
 
-  void UpdatePosition(Direction direction);
+  Spaceship& operator = (Spaceship& source);
+
+  void update_position(Direction direction);
 
  private:
   int _screen_width;
