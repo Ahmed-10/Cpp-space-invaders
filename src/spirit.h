@@ -2,6 +2,7 @@
 #define SPIRIT_H
 
 #include <iostream>
+#include <mutex>
 
 enum class Direction { kLeft, kRight, kUp, kDown};
 

@@ -11,8 +11,45 @@ Spaceship::Spaceship(int screen_width, int screen_height)
   _y_pos = screen_height;
 }
 
+Spaceship::Spaceship(Spaceship& source){
+  // std::lock_guard<std::mutex> lock(_mtx);
+
+  _x_pos = source._x_pos;
+  _y_pos = source._y_pos;
+  _rank = source._rank;
+  _screen_height = source._screen_height;
+  _screen_width = source._screen_width;
+}
+
 Spaceship& Spaceship::operator = (Spaceship& source){
   if(this == &source) { return *this; }
+
+  // std::lock_guard<std::mutex> lock(_mtx);
+
+  _x_pos = source._x_pos;
+  _y_pos = source._y_pos;
+  _rank = source._rank;
+  _screen_height = source._screen_height;
+  _screen_width = source._screen_width;
+
+  return *this;
+}
+
+Spaceship::Spaceship(Spaceship&& source){
+  // std::lock_guard<std::mutex> lock(_mtx);
+
+  _x_pos = source._x_pos;
+  _y_pos = source._y_pos;
+  _rank = source._rank;
+  _screen_height = source._screen_height;
+  _screen_width = source._screen_width;
+
+}
+
+Spaceship& Spaceship::operator = (Spaceship&& source){
+  if(this == &source) { return *this; }
+
+  // std::lock_guard<std::mutex> lock(_mtx);
 
   _x_pos = source._x_pos;
   _y_pos = source._y_pos;
@@ -24,6 +61,9 @@ Spaceship& Spaceship::operator = (Spaceship& source){
 }
 
 void Spaceship::update_position(Direction direction) {
+
+  // std::lock_guard<std::mutex> lock(_mtx);
+
   switch (direction) {
     case Direction::kLeft:
       _x_pos -= 4;
