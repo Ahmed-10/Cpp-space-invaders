@@ -74,11 +74,17 @@ void Game::update_aliens(){
   std::lock_guard<std::mutex> lock(_aliens_mtx);
   size_t size = _aliens.size();
 
-  int min_x = _screen_width, max_x = 0;
+  int min_x = _screen_width, max_x = 0, max_y = 0;
   for(size_t i = 0; i < size; i++){
     if(_aliens[i]->get_x_pos() < min_x) { min_x = _aliens[i]->get_x_pos(); }
     if(_aliens[i]->get_x_pos() > max_x) { max_x = _aliens[i]->get_x_pos(); }
+    if(_aliens[i]->get_y_pos() > max_y) { max_y = _aliens[i]->get_y_pos(); }
   }
+
+  if (max_y >= _screen_height - 60)
+  {
+    _running = false;
+  }  
 
   if (min_x <= 0)
   {
@@ -130,7 +136,7 @@ void Game::update_spaceship_fire(){
         int x = _aliens[j]->get_x_pos();
         int y = _aliens[j]->get_y_pos();
         lock.unlock();
-        
+        //check collision with the aliens
         if((x_ > x) && (x_ < (x + 40)) && (y_ > y) && (y_ < (y + 40))){
           _score++;
           lock.lock();
@@ -189,6 +195,7 @@ void Game::update_aliens_fire(){
       _aliens_fire.erase(_aliens_fire.begin() + i);
       i--;
     }
+    //check collision with the spaceship
     else if ((x_ > x) && (x_ < (x + 40)) && (y_ + 16 >= y))
     {
       _lifes --;
@@ -247,21 +254,30 @@ bool Game::Run(std::size_t target_frame_duration) {
     //and the alien fire should increase and apend new member to the vector 
     _renderer->Clear_screen();
 
-    std::thread t0(&Game::event_handle, this);
-    std::thread t1(&Game::draw_spaceship, this);
-    std::thread t3(&Game::draw_aliens, this);
-    std::thread t5(&Game::draw_spaceship_fire, this);
-    std::thread t7(&Game::draw_aliens_fire, this);
+    // std::thread t0(&Game::event_handle, this);
+    std::future<void> ftr0 = std::async(&Game::event_handle, this);
+    // std::thread t1(&Game::draw_spaceship, this);
+    std::future<void> ftr1 = std::async(&Game::draw_spaceship, this);
+    // std::thread t3(&Game::draw_aliens, this);
+    std::future<void> ftr3 = std::async(&Game::draw_aliens, this);
+    // std::thread t5(&Game::draw_spaceship_fire, this);
+    std::future<void> ftr5 = std::async(&Game::draw_spaceship_fire, this);
+    // std::thread t7(&Game::draw_aliens_fire, this);
+    std::future<void> ftr7 = std::async(&Game::draw_aliens_fire, this);
     
-    t3.join();
-    std::thread t4(&Game::update_aliens, this);
-    t0.join();
-    t1.join();
-    std::thread t2(&Game::update_spaceship, this); 
-    t5.join();
-    std::thread t6(&Game::update_spaceship_fire, this);
-    t7.join();
-    std::thread t8(&Game::update_aliens_fire, this);
+    ftr3.get();//t3.join();
+    // std::thread t4(&Game::update_aliens, this);
+    std::future<void> ftr4 = std::async(&Game::update_aliens, this);
+    ftr0.get();//t0.join();
+    ftr1.get();//t1.join();
+    // std::thread t2(&Game::update_spaceship, this);
+    std::future<void> ftr2 = std::async(&Game::update_spaceship, this); 
+    ftr5.get();//t5.join();
+    // std::thread t6(&Game::update_spaceship_fire, this);
+    std::future<void> ftr6 = std::async(&Game::update_spaceship_fire, this);
+    ftr7.get();//t7.join();
+    // std::thread t8(&Game::update_aliens_fire, this);
+    std::future<void> ftr8 = std::async(&Game::update_aliens_fire, this);
     
     _renderer->Render_live_data(get_score(), get_lifes());
 
@@ -288,10 +304,14 @@ bool Game::Run(std::size_t target_frame_duration) {
     SDL_Delay(target_frame_duration - frame_duration);
     }
 
-    t2.join();
-    t4.join();
-    t6.join();
-    t8.join();
+    // t2.join();
+    // t4.join();
+    // t6.join();
+    // t8.join();
+    ftr2.get();
+    ftr4.get();
+    ftr6.get();
+    ftr8.get();
   }
 
   _running = true;

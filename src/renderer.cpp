@@ -47,10 +47,18 @@ Renderer::Renderer(const std::size_t screen_width,
   font = TTF_OpenFont("../gfx/courier-new.ttf", 56);
   SDL_Surface* surface = TTF_RenderText_Solid(font, "s p a c e  i n v a d e r s", textColor);
   sdl_texture_name = SDL_CreateTextureFromSurface(sdl_renderer, surface);
+  if (nullptr == sdl_texture_name) {
+    std::cerr << "texture name could not be created.\n";
+    std::cerr << "SDL_Error: " << SDL_GetError() << "\n";
+  }
   SDL_FreeSurface(surface);
 
   surface = TTF_RenderText_Solid(font, "play", textColor);
   sdl_texture_play = SDL_CreateTextureFromSurface(sdl_renderer, surface);
+  if (nullptr == sdl_texture_play) {
+    std::cerr << "texture play could not be created.\n";
+    std::cerr << "SDL_Error: " << SDL_GetError() << "\n";
+  }
   SDL_FreeSurface(surface);
 
   surface = TTF_RenderText_Solid(font, "play again", textColor);
@@ -59,20 +67,36 @@ Renderer::Renderer(const std::size_t screen_width,
 
   surface = TTF_RenderText_Solid(font, "quit", textColor);
   sdl_texture_quit = SDL_CreateTextureFromSurface(sdl_renderer, surface);
+  if (nullptr == sdl_texture_quit) {
+    std::cerr << "texture quit could not be created.\n";
+    std::cerr << "SDL_Error: " << SDL_GetError() << "\n";
+  }
   SDL_FreeSurface(surface);
 
   surface = IMG_Load("../gfx/pointer1.png");
   sdl_texture_ptr = SDL_CreateTextureFromSurface(sdl_renderer, surface);
+  if (nullptr == sdl_texture_ptr) {
+    std::cerr << "texture pointer could not be created.\n";
+    std::cerr << "SDL_Error: " << SDL_GetError() << "\n";
+  }
   SDL_FreeSurface(surface);
 
   //spirit texture
   surface = IMG_Load("../gfx/spirit.png");
   sdl_texture_spaceship = SDL_CreateTextureFromSurface(sdl_renderer, surface);
+  if (nullptr == sdl_texture_spaceship) {
+    std::cerr << "texture spaceship could not be created.\n";
+    std::cerr << "SDL_Error: " << SDL_GetError() << "\n";
+  }
   SDL_FreeSurface(surface);
   
   //spirit fire texture
   surface = IMG_Load("../gfx/shoot0.png");
   sdl_texture_player_fire = SDL_CreateTextureFromSurface(sdl_renderer, surface);
+  if (nullptr == sdl_texture_player_fire) {
+    std::cerr << "texture player fire could not be created.\n";
+    std::cerr << "SDL_Error: " << SDL_GetError() << "\n";
+  }
   SDL_FreeSurface(surface);
 
   //alien random texture
@@ -85,10 +109,18 @@ Renderer::Renderer(const std::size_t screen_width,
 
     surface = IMG_Load(_aliens_imgs[img].c_str());
     sdl_texture_aliens.emplace_back(SDL_CreateTextureFromSurface(sdl_renderer, surface));
+    if (nullptr == sdl_texture_aliens[i]) {
+      std::cerr << "texture alien " <<  i << " could not be created.\n";
+      std::cerr << "SDL_Error: " << SDL_GetError() << "\n";
+    }
     SDL_FreeSurface(surface);
 
     surface = IMG_Load(_aliens_fire_imgs[img].c_str());
     sdl_texture_aliens_fires.emplace_back(SDL_CreateTextureFromSurface(sdl_renderer, surface));
+    if (nullptr == sdl_texture_aliens_fires[i]) {
+      std::cerr << "texture aliens fire " << i << " could not be created.\n";
+      std::cerr << "SDL_Error: " << SDL_GetError() << "\n";
+    }
     SDL_FreeSurface(surface);
   }
 }
@@ -201,6 +233,7 @@ void Renderer::Render_spirit(int const x, int const y) {
   // Render Entity
   block.x = x;
   block.y = y - (grid_width * 3);
+  std::lock_guard<std::mutex> lock(render_mtx);
   SDL_RenderCopy(sdl_renderer, sdl_texture_spaceship, nullptr, &block);
 }
 
@@ -212,7 +245,8 @@ void Renderer::Render_aliens(int const x, int const y, int const rank){
 
   block.x = x;
   block.y = y;
-      
+
+  std::lock_guard<std::mutex> lock(render_mtx);
   SDL_RenderCopy(sdl_renderer, sdl_texture_aliens[rank], nullptr, &block);
 }
 
@@ -223,6 +257,8 @@ void Renderer::Render_spirit_fire(int const x, int const y) {
   block.h = 8;
   block.x = x;
   block.y = y;
+
+  std::lock_guard<std::mutex> lock(render_mtx);
   SDL_RenderCopy(sdl_renderer, sdl_texture_player_fire, nullptr, &block); 
 }
 
@@ -233,6 +269,8 @@ void Renderer::Render_aliens_fire(int x, int y, int rank) {
   block.h = 16;
   block.x = x;
   block.y = y;
+
+  std::lock_guard<std::mutex> lock(render_mtx);
   SDL_RenderCopy(sdl_renderer, sdl_texture_aliens_fires[rank], nullptr, &block); 
 }
 

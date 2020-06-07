@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <random>
+#include <mutex>
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
 #include "SDL2/SDL_ttf.h"
@@ -49,6 +50,8 @@ class Renderer {
   SDL_Texture *sdl_texture_lifes;
   std::vector<SDL_Texture*> sdl_texture_aliens;
   std::vector<SDL_Texture*> sdl_texture_aliens_fires;
+
+  std::mutex render_mtx;
 
   TTF_Font* font;
   SDL_Color textColor = { 250, 250, 250 };
