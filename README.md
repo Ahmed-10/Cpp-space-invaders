@@ -2,7 +2,6 @@
 
 This is a repo for the Capstone project as the final project i should deliver in the [Udacity C++ Nanodegree Program](https://www.udacity.com/course/c-plus-plus-nanodegree--nd213).
 
-<img src="snake_game.gif"/>
 
 The Capstone Project gives you a chance to integrate what I've learned throughout this program. This project will become an important part of My portfolio to share with current and future colleagues and employers.
 
@@ -22,3 +21,10 @@ In this project, I built My own C++ application an Space Invaders Game, followin
   * Linux: gcc / g++ is installed by default on most Linux distros
   * Mac: same deal as make - [install Xcode command line tools](https://developer.apple.com/xcode/features/)
   * Windows: recommend using [MinGW](http://www.mingw.org/)
+  
+## Basic Build Instructions
+
+1. Clone this repo.
+2. Make a build directory in the top level directory: `mkdir build && cd build`
+3. Compile: `cmake .. && make`
+4. Run it: `./Game`
